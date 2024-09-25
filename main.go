@@ -46,21 +46,23 @@ func MakeTile(label string, scale int, col color.Color) image.Image {
 	inset := size / 16
 	rad := inset * 2
 
+	// 1px white border with transparent inside
 	im := image.NewRGBA(image.Rect(0, 0, sizei, sizei))
 	draw.Draw(im, image.Rect(0, 0, sizei, sizei), image.NewUniform(color.White), image.Point{}, draw.Over)
+	draw.Draw(im, image.Rect(1, 1, sizei-1, sizei-1), image.NewUniform(color.Transparent), image.Point{}, draw.Src)
 
 	Rect(ra, 1, 1, size-2, size-2)
 	RoundedRect(ra, inset, inset, size-inset-inset, size-inset-inset, rad)
 
-	ra.Draw(im, ra.Bounds(), image.NewUniform(color.RGBA{0, 0, 0, 255}), image.Pt(0, 0))
+	ra.Draw(im, ra.Bounds(), image.NewUniform(color.RGBA{210, 105, 30, 255}), image.Pt(0, 0))
 
-	tm := fixed.P(int(rad), int(rad+13))
+	tm := fixed.P(3, 13)
 	for _, c := range label {
 		dr, mask, maskp, advance, ok := basicfont.Face7x13.Glyph(tm, c)
 		if !ok {
 			panic("")
 		}
-		draw.DrawMask(im, dr, image.NewUniform(color.Black), image.Point{}, mask, maskp, draw.Over)
+		draw.DrawMask(im, dr, image.NewUniform(color.White), image.Point{}, mask, maskp, draw.Over)
 		tm = tm.Add(fixed.Point26_6{X: advance, Y: 0})
 	}
 
