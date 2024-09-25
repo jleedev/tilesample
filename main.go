@@ -70,6 +70,7 @@ func MakeTile(label string, scale int, col color.Color) image.Image {
 }
 
 func ServeTile(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	z, err := strconv.Atoi(r.PathValue("z"))
 	if err != nil {
 		http.NotFound(w, r)
@@ -137,7 +138,8 @@ type TileJson = struct {
 }
 
 func ServeTileJson(w http.ResponseWriter, r *http.Request) {
-	origin := fmt.Sprintf("%s://%s", r.URL.Scheme, r.Host)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	origin := fmt.Sprintf("https://%s", r.Host)
 	url := fmt.Sprint(origin, "/{z}/{x}/{y}.png")
 	tj := TileJson{
 		Tilejson: "3.0.0",
