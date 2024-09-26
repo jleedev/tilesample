@@ -139,7 +139,15 @@ type TileJson = struct {
 
 func ServeTileJson(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	origin := fmt.Sprintf("https://%s", r.Host)
+	scheme := r.Header.Get("X-Forwarded-Proto")
+	if scheme == "" {
+		scheme = "http"
+	}
+	host := r.Header.Get("X-Forwarded-Host")
+	if host == "" {
+		host = r.Host
+	}
+	origin := fmt.Sprintf("%s://%s", scheme, host)
 	url := fmt.Sprint(origin, "/{z}/{x}/{y}.png")
 	tj := TileJson{
 		Tilejson: "3.0.0",
