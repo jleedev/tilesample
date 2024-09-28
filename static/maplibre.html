@@ -19,6 +19,7 @@
           tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
           tileSize: 256,
+	  maxzoom: 19,
         },
         tilesample: {
           type: 'raster',
@@ -40,6 +41,10 @@
     },
     center: [0, 0],
     zoom: 1,
+  });
+  map.on("zoomend", ({map: target}) => {
+    const zoom = Math.round(map.getZoom());
+    if (zoom != map.getZoom()) map.flyTo({ zoom });
   });
   map.addControl(new maplibregl.LogoControl({compact: false}));
   map.addControl(new maplibregl.ScaleControl());
