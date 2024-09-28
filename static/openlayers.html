@@ -1,0 +1,31 @@
+<!doctype html>
+<meta name="viewport" content="width=device-width,maximum-scale=1">
+<title>openlayers tilesample</title>
+<style>#map{height:100vh;:has(&){display:contents}}</style>
+
+<script src="https://cdn.jsdelivr.net/npm/ol@v10.2.1/dist/ol.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v10.2.1/ol.css">
+
+<div id="map" tabindex="0" autofocus></div>
+
+<script type="module">
+  const map = window.map = new ol.Map({
+    target: 'map',
+    layers: [
+      new ol.layer.Tile({
+        source: new ol.source.OSM(),
+      }),
+      new ol.layer.Tile({
+        source: new ol.source.TileJSON({
+          url: './',
+        }),
+      })
+    ],
+    view: new ol.View({
+      center: [0, 0],
+      zoom: 1,
+    }),
+  });
+  map.addControl(new ol.control.ZoomSlider());
+  map.addControl(new ol.control.ScaleLine());
+</script>

@@ -1,12 +1,14 @@
 package main
 
 import (
+	"embed"
 	"encoding/json"
 	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
 	"image/png"
+	"io/fs"
 	"net"
 	"net/http"
 	"os"
@@ -17,6 +19,9 @@ import (
 	"golang.org/x/image/math/fixed"
 	"golang.org/x/image/vector"
 )
+
+//go:embed static/*
+var static embed.FS
 
 func Rect(ra *vector.Rasterizer, x, y, width, height float32) {
 	ra.MoveTo(x, y)
@@ -138,6 +143,12 @@ type TileJson = struct {
 }
 
 func ServeTileJson(w http.ResponseWriter, r *http.Request) {
+	if strings.HasPrefix(r.Header.Get("Accept"), "text/html") {
+		ServeIndexPage(w, r)
+		return
+	}
+	w.Header().Add("Vary", "Accept")
+	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	scheme := r.Header.Get("X-Forwarded-Proto")
 	if scheme == "" {
@@ -153,6 +164,7 @@ func ServeTileJson(w http.ResponseWriter, r *http.Request) {
 		Tilejson: "3.0.0",
 		Tiles:    []string{url},
 		Maxzoom:  30,
+		TileSize: 256,
 	}
 	out, err := json.Marshal(tj)
 	if err != nil {
@@ -162,9 +174,21 @@ func ServeTileJson(w http.ResponseWriter, r *http.Request) {
 	w.Write(out)
 }
 
+func ServeIndexPage(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Vary", "Accept")
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	content, _ := static.ReadFile("static/index.html")
+	w.Write(content)
+}
+
 func main() {
-	http.HandleFunc("/", ServeTileJson)
+	http.HandleFunc("/{$}", ServeTileJson)
 	http.HandleFunc("/{z}/{x}/{yext}", ServeTile)
+	root, err := fs.Sub(static, "static")
+	if err != nil {
+		panic(err)
+	}
+	http.Handle("/", http.FileServerFS(root))
 	port := fmt.Sprintf(":%s", os.Getenv("PORT"))
 	listen, err := net.Listen("tcp", port)
 	if err != nil {
