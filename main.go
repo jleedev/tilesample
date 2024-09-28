@@ -188,6 +188,7 @@ func footer() string {
 	revision := ""
 	dirty := ""
 	if info, ok := debug.ReadBuildInfo(); ok {
+		path = info.Path + "@"
 		for _, setting := range info.Settings {
 			switch setting.Key {
 			case "vcs.revision":
@@ -199,9 +200,8 @@ func footer() string {
 			}
 		}
 		if revision == "" {
-			return info.Main.Version
+			return path + info.Main.Version
 		}
-		path = info.Path + "@"
 	}
 	return path + revision + dirty
 }
