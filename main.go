@@ -12,6 +12,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"runtime/debug"
 	"strconv"
 	"strings"
 
@@ -179,6 +180,30 @@ func ServeIndexPage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	content, _ := static.ReadFile("static/index.html")
 	w.Write(content)
+	fmt.Fprintf(w, "<address>%s</address>", footer())
+}
+
+func footer() string {
+	path := ""
+	revision := ""
+	dirty := ""
+	if info, ok := debug.ReadBuildInfo(); ok {
+		for _, setting := range info.Settings {
+			switch setting.Key {
+			case "vcs.revision":
+				revision = setting.Value[:12]
+			case "vcs.modified":
+				if setting.Value == "true" {
+					dirty = "-dirty"
+				}
+			}
+		}
+		if revision == "" {
+			return info.Main.Version
+		}
+		path = info.Path + "@"
+	}
+	return path + revision + dirty
 }
 
 func main() {
