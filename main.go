@@ -207,13 +207,13 @@ func footer() string {
 }
 
 func main() {
-	http.HandleFunc("/{$}", ServeTileJson)
-	http.HandleFunc("/{z}/{x}/{yext}", ServeTile)
+	http.HandleFunc("GET /{$}", ServeTileJson)
+	http.HandleFunc("GET /{z}/{x}/{yext}", ServeTile)
 	root, err := fs.Sub(static, "static")
 	if err != nil {
 		panic(err)
 	}
-	http.Handle("/", http.FileServerFS(root))
+	http.Handle("GET /", http.FileServerFS(root))
 	port := fmt.Sprintf(":%s", os.Getenv("PORT"))
 	listen, err := net.Listen("tcp", port)
 	if err != nil {
