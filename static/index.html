@@ -2,6 +2,8 @@
 <html lang=en>
 <meta charset=utf-8>
 <meta name=viewport content="width=device-width">
+<link rel=icon href="data:">
+<title>tilesample</title>
 
 <a href="leaflet.html">leaflet</a>
 <a href="maplibre.html">maplibre</a>
@@ -10,6 +12,6 @@
 <pre id="tilejson"></pre>
 
 <script type=module>
-  tilejson.append(JSON.stringify(await fetch(".").then(r=>r.json()), null, 2));
+  import tilejson from "./" with { type: "json" };
+  document.getElementById("tilejson").append(JSON.stringify(tilejson, null, 2));
 </script>
-
