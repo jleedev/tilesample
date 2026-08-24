@@ -145,7 +145,7 @@ type TileJson = struct {
 }
 
 func DispatchIndex(w http.ResponseWriter, r *http.Request) {
-	t, err := accept.Negotiate(r.Header.Get("Accept"), "text/html", "application/json")
+	t, err := accept.Negotiate(r.Header.Get("Accept"), "application/json", "text/html")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
