@@ -46,6 +46,31 @@ func RoundedRect(ra *vector.Rasterizer, x, y, width, height, r float32) {
 	ra.ClosePath()
 }
 
+type Gradient struct{ int }
+
+func (g Gradient) At(x, y int) color.Color {
+	out := 1
+	if x*2 > g.int {
+		out ^= x & 1
+	}
+	if y*2 > g.int {
+		out ^= y & 1
+	}
+	if out == 0 {
+		return color.Transparent
+	} else {
+		return color.Opaque
+	}
+}
+
+func (g Gradient) Bounds() image.Rectangle {
+	return (*image.Uniform)(nil).Bounds()
+}
+
+func (g Gradient) ColorModel() color.Model {
+	return image.Transparent
+}
+
 func MakeTile(label string, scale int, col color.Color) image.Image {
 	sizei := 256 * scale
 	size := float32(sizei)
@@ -55,14 +80,22 @@ func MakeTile(label string, scale int, col color.Color) image.Image {
 
 	// 1px white border with transparent inside
 	im := image.NewRGBA(image.Rect(0, 0, sizei, sizei))
-	draw.Draw(im, image.Rect(0, 0, sizei, sizei), image.NewUniform(color.White), image.Point{}, draw.Over)
-	draw.Draw(im, image.Rect(1, 1, sizei-1, sizei-1), image.NewUniform(color.Transparent), image.Point{}, draw.Src)
+	draw.Draw(im, image.Rect(0, 0, sizei, sizei), image.White, image.Point{}, draw.Over)
+	draw.Draw(im, image.Rect(1, 1, sizei-1, sizei-1), image.Transparent, image.Point{}, draw.Src)
 
 	Rect(ra, 1, 1, size-2, size-2)
 	RoundedRect(ra, inset, inset, size-inset-inset, size-inset-inset, rad)
 
-	ra.Draw(im, ra.Bounds(), image.NewUniform(color.RGBA{210, 105, 30, 255}), image.Pt(0, 0))
+	// define the gradient mask
+	fill := image.NewUniform(color.RGBA{210, 105, 30, 255})
+	mask := Gradient{sizei}
+	comb := image.NewRGBA(im.Bounds())
+	draw.DrawMask(comb, im.Bounds(), fill, image.Pt(0, 0), mask, image.Pt(0, 0), draw.Src)
 
+	// draw the picture frame
+	ra.Draw(im, ra.Bounds(), comb, image.Pt(0, 0))
+
+	// draw the label
 	tm := fixed.P(3, 13)
 	for _, c := range label {
 		dr, mask, maskp, advance, ok := basicfont.Face7x13.Glyph(tm, c)
