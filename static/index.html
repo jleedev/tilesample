@@ -1,17 +1,18 @@
 <!doctype html>
 <html lang=en>
 <meta charset=utf-8>
-<meta name=viewport content="width=device-width">
-<link rel=icon href="data:">
 <title>tilesample</title>
+<link rel=icon href=data:,>
+<meta name=color-scheme content="light dark">
+<meta name=viewport content="width=device-width">
 
 <a href="leaflet.html">leaflet</a>
 <a href="maplibre.html">maplibre</a>
 <a href="openlayers.html">openlayers</a>
 
-<pre id="tilejson"></pre>
+<pre id=tilejson></pre>
 
 <script type=module>
   import tilejson from "./" with { type: "json" };
-  document.getElementById("tilejson").append(JSON.stringify(tilejson, null, 2));
+  document.getElementById("tilejson").appendChild(document.createTextNode(JSON.stringify(tilejson, null, 2)));
 </script>

@@ -2,7 +2,7 @@ package main
 
 import (
 	"embed"
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 	"image"
 	"image/color"
@@ -16,6 +16,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/timewasted/go-accept-headers"
 	"golang.org/x/image/font/basicfont"
 	"golang.org/x/image/math/fixed"
 	"golang.org/x/image/vector"
@@ -143,11 +144,23 @@ type TileJson = struct {
 	Grids    []string `json:"grids,omitempty"`
 }
 
-func ServeTileJson(w http.ResponseWriter, r *http.Request) {
-	if strings.HasPrefix(r.Header.Get("Accept"), "text/html") {
-		ServeIndexPage(w, r)
+func DispatchIndex(w http.ResponseWriter, r *http.Request) {
+	t, err := accept.Negotiate(r.Header.Get("Accept"), "text/html", "application/json")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	switch t {
+	case "application/json":
+		ServeTileJson(w, r)
+	case "text/html":
+		ServeIndexPage(w, r)
+	default:
+		http.Error(w, http.StatusText(http.StatusNotAcceptable), http.StatusNotAcceptable)
+	}
+}
+
+func ServeTileJson(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Vary", "Accept")
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -167,12 +180,10 @@ func ServeTileJson(w http.ResponseWriter, r *http.Request) {
 		Maxzoom:  30,
 		TileSize: 256,
 	}
-	out, err := json.Marshal(tj)
-	if err != nil {
-		http.Error(w, err.Error(), 500)
+	if err := json.MarshalWrite(w, tj); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Write(out)
 }
 
 func ServeIndexPage(w http.ResponseWriter, r *http.Request) {
@@ -187,7 +198,7 @@ func ServeIndexPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("GET /{$}", ServeTileJson)
+	http.HandleFunc("GET /{$}", DispatchIndex)
 	http.HandleFunc("GET /{z}/{x}/{yext}", ServeTile)
 	root, err := fs.Sub(static, "static")
 	if err != nil {
@@ -200,5 +211,5 @@ func main() {
 		panic(err)
 	}
 	fmt.Printf("http://%s\n", listen.Addr())
-	http.Serve(listen, nil)
+	panic(http.Serve(listen, nil))
 }
